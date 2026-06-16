@@ -3,9 +3,11 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 const RECONNECT_DELAY_MS = 3000;
 
 export function useWebSocket() {
-  const [socket, setSocket] = useState(null);
   const [connected, setConnected] = useState(false);
-  const [messages, setMessages] = useState([]);
+  // Only the most recent frame is kept — each task_update is a full snapshot,
+  // so there's no need to accumulate (and leak) an ever-growing array.
+  const [lastMessage, setLastMessage] = useState(null);
+  const wsRef = useRef(null);
   const reconnectTimer = useRef(null);
   const destroyed = useRef(false);
 
@@ -15,6 +17,7 @@ export function useWebSocket() {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${protocol}//${window.location.host}/ws`;
     const ws = new WebSocket(wsUrl);
+    wsRef.current = ws;
 
     ws.onopen = () => {
       setConnected(true);
@@ -23,8 +26,7 @@ export function useWebSocket() {
 
     ws.onmessage = (event) => {
       try {
-        const data = JSON.parse(event.data);
-        setMessages(prev => [...prev, data]);
+        setLastMessage(JSON.parse(event.data));
       } catch (e) {
         console.warn('WS parse error:', e);
       }
@@ -41,8 +43,6 @@ export function useWebSocket() {
     ws.onerror = () => {
       ws.close();
     };
-
-    setSocket(ws);
   }, []);
 
   useEffect(() => {
@@ -51,19 +51,10 @@ export function useWebSocket() {
     return () => {
       destroyed.current = true;
       clearTimeout(reconnectTimer.current);
-      setSocket(ws => { ws?.close(); return null; });
+      wsRef.current?.close();
+      wsRef.current = null;
     };
   }, [connect]);
 
-  const send = useCallback((message) => {
-    if (socket && socket.readyState === WebSocket.OPEN) {
-      socket.send(JSON.stringify(message));
-    }
-  }, [socket]);
-
-  const subscribe = useCallback((taskId) => {
-    send({ type: 'subscribe', task_id: taskId });
-  }, [send]);
-
-  return { connected, messages, send, subscribe };
+  return { connected, lastMessage };
 }
