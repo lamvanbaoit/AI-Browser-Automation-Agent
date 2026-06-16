@@ -151,6 +151,8 @@ async def run_agent_task(task_id: str, task: str, settings: dict):
             browser_type=settings.get("browserType", "chromium"),
             headless=headless,
             stealth=settings.get("stealth", True),
+            viewport=config.VIEWPORT,
+            timeout=config.TIMEOUT,
             llm_provider=llm_provider,
             llm_model=llm_model,
             llm_temperature=llm_config.get("temperature", 0.2),

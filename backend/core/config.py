@@ -19,7 +19,7 @@ class Config:
     TIMEOUT: int = int(os.getenv("TIMEOUT", "30000"))
 
     # LLM settings
-    LLM_PROVIDER: str = os.getenv("LLM_PROVIDER", "gemini")
+    LLM_PROVIDER: str = os.getenv("LLM_PROVIDER", "minimax")
     LLM_MODEL: str = os.getenv("LLM_MODEL", "minimax/minimax-m2.5")
     LLM_TEMPERATURE: float = float(os.getenv("LLM_TEMPERATURE", "0.2"))
 

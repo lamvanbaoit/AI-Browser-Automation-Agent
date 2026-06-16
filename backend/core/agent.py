@@ -64,7 +64,7 @@ class BrowserAutomationAgent:
         stealth: bool = True,
         viewport: tuple = (1920, 1080),
         timeout: int = 30000,
-        llm_provider: str = "gemini",
+        llm_provider: str = "minimax",
         llm_model: str = "default",
         llm_temperature: float = 0.7,
         llm_api_key: Optional[str] = None,
@@ -88,17 +88,14 @@ class BrowserAutomationAgent:
         model_name = self.llm_model if self.llm_model and self.llm_model != "default" else None
 
         if not model_name:
-            if self.llm_provider == "gemini":
-                model_name = "minimax/minimax-m2.5"
-            else:
-                model_name = "minimax/minimax-m2.5"
+            model_name = "minimax/minimax-m2.5"
 
         logger.info("=" * 50)
         logger.info("🤖 LLM Configuration:")
         logger.info(f"   Provider: {self.llm_provider}")
         logger.info(f"   Model: {model_name}")
         logger.info(f"   Base URL: {self.llm_base_url}")
-        logger.info(f"   API Key: {self.llm_api_key[:10] if self.llm_api_key else 'None'}...{self.llm_api_key[-4:] if self.llm_api_key else ''}")
+        logger.info(f"   API Key: {'set' if self.llm_api_key else 'MISSING'}")
         logger.info(f"   Temperature: {self.llm_temperature}")
         logger.info("=" * 50)
 
@@ -141,7 +138,7 @@ class BrowserAutomationAgent:
             logger.info(f"[LLM #{call_id} ➡️  REQ] model={model_name} | {len(msgs)} msgs | {in_tok_client} tokens (client-counted)")
             for i, (m, text) in enumerate(zip(msgs, msg_texts)):
                 role = getattr(m, "type", type(m).__name__)
-                logger.info(f"  msg[{i}] {role} ({_count_tokens(text)} tok / {len(text)} chars): {text[:500]}{'...' if len(text) > 500 else ''}")
+                logger.debug(f"  msg[{i}] {role} ({_count_tokens(text)} tok / {len(text)} chars): {text[:500]}{'...' if len(text) > 500 else ''}")
 
             t0 = time.time()
             try:
@@ -182,7 +179,7 @@ class BrowserAutomationAgent:
                     tok_str = f"in={in_tok_client} out={out_tok_client} total={in_tok_client+out_tok_client} tokens (client-counted, API không trả usage)"
 
                 logger.info(f"[LLM #{call_id} ⬅️  RES] {elapsed:.1f}s | {tok_str}")
-                logger.info(f"  response ({out_tok_client} tok / {len(content_out)} chars): {content_out[:500]}{'...' if len(content_out) > 500 else ''}")
+                logger.debug(f"  response ({out_tok_client} tok / {len(content_out)} chars): {content_out[:500]}{'...' if len(content_out) > 500 else ''}")
                 return result
             except Exception as e:
                 elapsed = time.time() - t0
