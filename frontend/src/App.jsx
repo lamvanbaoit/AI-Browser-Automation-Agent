@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Bot, Globe, FlaskConical, Webhook } from 'lucide-react';
 import { ChatBox } from './components/ChatBox';
 import { useWebSocket } from './hooks/useWebSocket';
@@ -17,8 +17,7 @@ function App() {
     maxIterations: 5,
   };
 
-  const { connected, messages: wsMessages } = useWebSocket();
-  const wsCursor = useRef(0);
+  const { connected, lastMessage } = useWebSocket();
 
   const applyTaskDetail = useCallback((taskDetail) => {
     if (!taskDetail || !taskDetail.task_id) return;
@@ -47,7 +46,7 @@ function App() {
           updated[existingIdx] = { ...updated[existingIdx], content: newContent, id: errorKey };
           return updated;
         }
-        return [...currentMessages, { sender: 'bot', content: newContent, id: errorKey }];
+        return [...currentMessages, { sender: 'bot', content: newContent, id: errorKey, timestamp: new Date().toISOString() }];
       }
 
       // Completed
@@ -94,36 +93,32 @@ function App() {
           updated[existingIdx] = { ...updated[existingIdx], content: newContent, id: doneKey, stepDetails, screenshots };
           return updated;
         }
-        return [...currentMessages, { sender: 'bot', content: newContent, id: doneKey, stepDetails, screenshots }];
+        return [...currentMessages, { sender: 'bot', content: newContent, id: doneKey, stepDetails, screenshots, timestamp: new Date().toISOString() }];
       }
 
-      // Running (live progress)
+      // Running (live progress) — update the same bubble created on send,
+      // so it transitions 🚀 → 🔄 → ✅ instead of leaving a stale bubble.
       if (taskDetail.status === 'running' && taskDetail.steps?.length > 0) {
-        const runningKey = `running-${tid}`;
         const newContent = `🔄 Running...\n\n📋 Progress:\n${taskDetail.steps.slice(-3).join('\n')}`;
-        const existingIdx = currentMessages.findIndex(m => m.id === runningKey);
+        const existingIdx = currentMessages.findIndex(m => m.id === currentKey);
         if (existingIdx >= 0) {
           const updated = [...currentMessages];
           updated[existingIdx] = { ...updated[existingIdx], content: newContent };
           return updated;
         }
-        return [...currentMessages, { sender: 'bot', content: newContent, id: runningKey }];
+        return [...currentMessages, { sender: 'bot', content: newContent, id: currentKey, timestamp: new Date().toISOString() }];
       }
 
       return currentMessages;
     });
   }, []);
 
-  // Process new WebSocket messages as they arrive (realtime path)
+  // Apply each task snapshot as it arrives (realtime path)
   useEffect(() => {
-    for (let i = wsCursor.current; i < wsMessages.length; i++) {
-      const m = wsMessages[i];
-      if (m && m.type === 'task_update' && m.task) {
-        applyTaskDetail(m.task);
-      }
+    if (lastMessage?.type === 'task_update' && lastMessage.task) {
+      applyTaskDetail(lastMessage.task);
     }
-    wsCursor.current = wsMessages.length;
-  }, [wsMessages, applyTaskDetail]);
+  }, [lastMessage, applyTaskDetail]);
 
   const handleSendTask = async (task, timestamp) => {
     const trimmed = task.trim();
@@ -132,7 +127,8 @@ function App() {
       setMessages(prev => [...prev, {
         sender: 'bot',
         content: `⚠️ Input quá ngắn. Vui lòng nhập mô tả rõ ràng hơn.\n\n💡 Ví dụ hợp lệ:\n• "Go to google.com"\n• "Search youtube for cat videos"\n• "Open github.com and check trending repos"`,
-        id: `help-${Date.now()}`
+        id: `help-${Date.now()}`,
+        timestamp: new Date().toISOString()
       }]);
       return;
     }
@@ -141,7 +137,8 @@ function App() {
       setMessages(prev => [...prev, {
         sender: 'bot',
         content: `⚠️ Input không rõ ràng: "${trimmed}"\n\nVui lòng nhập task cụ thể hơn.\n\n💡 Ví dụ:\n• "hi" → "Go to google.com and say hi"\n• "tìm gì đó" → "Search google for AI news"`,
-        id: `help-${Date.now()}`
+        id: `help-${Date.now()}`,
+        timestamp: new Date().toISOString()
       }]);
       return;
     }
@@ -149,7 +146,8 @@ function App() {
     setMessages(prev => [...prev, {
       sender: 'user',
       content: task,
-      id: timestamp || Date.now().toString()
+      id: timestamp || Date.now().toString(),
+      timestamp: timestamp || new Date().toISOString()
     }]);
     setStatus('running');
 
@@ -167,14 +165,16 @@ function App() {
       setMessages(prev => [...prev, {
         sender: 'bot',
         content: `🚀 Task đang chạy...\n\n📝 ${task}\n⚙️ Model: ${modelDisplay}\n⏳ Đang xử lý...`,
-        id: `task-${data.task_id}`
+        id: `task-${data.task_id}`,
+        timestamp: new Date().toISOString()
       }]);
       setStatus('running');
     } catch (err) {
       setMessages(prev => [...prev, {
         sender: 'bot',
         content: `❌ Error: ${err.message}`,
-        id: `error-${Date.now()}`
+        id: `error-${Date.now()}`,
+        timestamp: new Date().toISOString()
       }]);
       setStatus('error');
     }

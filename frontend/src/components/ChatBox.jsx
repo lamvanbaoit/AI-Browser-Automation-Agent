@@ -68,7 +68,6 @@ export function ChatBox({ messages, onSend, status }) {
 
   const renderMessageContent = (msg) => {
     if (msg.stepDetails && msg.stepDetails.length > 0) {
-      const screenshots = msg.screenshots || [];
       return (
         <div>
           <p className="text-sm whitespace-pre-wrap mb-3 leading-relaxed">{msg.content}</p>
@@ -80,7 +79,6 @@ export function ChatBox({ messages, onSend, status }) {
                 step={step}
                 isExpanded={!!expandedSteps[`${msg.id}-${step.step}`]}
                 onToggle={() => toggleStep(`${msg.id}-${step.step}`)}
-                screenshot={screenshots.find(ss => ss.step === step.step)}
               />
             ))}
           </div>
