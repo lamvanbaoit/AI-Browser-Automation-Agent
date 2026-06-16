@@ -124,68 +124,10 @@ async def run_agent_task(task_id: str, task: str, settings: dict):
         from backend.core.config import config
         llm_config = config.get_llm_config()
 
-        # Auto-detect model based on task type
-        task_lower = task.lower()
-        is_browser_task = any(url in task_lower for url in [
-            # URLs
-            'http://', 'https://', 'www.', '.com', '.org', '.net', '.io', '.co', '.app',
-            # Navigation
-            'go to', 'navigate', 'open', 'visit', 'search', 'browse', 'surf', 'scroll',
-            'goto', 'load page', 'redirect',
-            # Browser actions
-            'click', 'type', 'fill', 'submit', 'clear', 'select', 'check', 'uncheck',
-            'hover', 'drag', 'drop', 'screenshot', 'capture', 'download', 'upload',
-            'double click', 'right click', 'context menu', 'scroll up', 'scroll down',
-            'scroll into', 'scroll to', 'wait for', 'sleep', 'pause',
-            # Common websites
-            'youtube', 'google', 'facebook', 'twitter', 'instagram', 'tiktok', 'github',
-            'reddit', 'linkedin', 'amazon', 'ebay', 'netflix', 'whatsapp', 'telegram',
-            'discord', 'slack', 'zoom', 'teams', 'outlook', 'gmail', 'yahoo',
-            'wikipedia', 'bing', 'duckduckgo', 'baidu', 'aliexpress', 'shopee', 'lazada',
-            # Form elements
-            'button', 'link', 'input', 'field', 'checkbox', 'radio', 'dropdown',
-            'select', 'option', 'textarea', 'form', 'menu', 'modal', 'popup', 'alert',
-            'dialog', 'tooltip', 'notification', 'toast', 'spinner', 'loader',
-            'placeholder', 'label', 'legend', 'fieldset', 'required', 'disabled',
-            # Navigation elements
-            'tab', 'window', 'back', 'forward', 'refresh', 'reload', 'close',
-            'minimize', 'maximize', 'fullscreen', 'address bar', 'url bar',
-            'home button', 'bookmarks', 'history', 'downloads',
-            # Auth
-            'login', 'logout', 'sign in', 'sign up', 'register', 'password', 'username',
-            'email', 'verify', 'captcha', 'otp', '2fa', 'mfa', 'reset password',
-            # Shopping
-            'cart', 'checkout', 'wishlist', 'product', 'price', 'order', 'buy',
-            'add to cart', 'remove from cart', 'promo code', 'coupon', 'discount',
-            'shipping', 'payment', 'billing', 'address', 'coupon',
-            # Media
-            'video', 'audio', 'play', 'pause', 'stop', 'mute', 'unmute', 'volume',
-            'fullscreen', 'exit fullscreen', 'subtitles', 'captions', 'stream',
-            'music', 'podcast', 'playlist', 'skip', 'rewind', 'forward',
-            # Data
-            'table', 'row', 'column', 'cell', 'filter', 'sort', 'search result',
-            'pagination', 'next page', 'previous page', 'load more', 'infinite scroll',
-            # Interaction
-            'wait', 'load', 'render', 'display', 'show', 'hide', 'expand', 'collapse',
-            'toggle', 'open menu', 'close menu', 'switch', 'change', 'update',
-            # Clipboard
-            'copy', 'paste', 'cut', 'select all', 'highlight', 'select text',
-            'copy text', 'paste text', 'duplicate',
-            # Settings
-            'cookie', 'cache', 'bookmark', 'history', 'extension', 'permission',
-            'settings', 'preferences', 'privacy', 'security', 'account',
-            # Developer
-            'console', 'inspect', 'element', 'network', 'api', 'ajax', 'fetch',
-            'request', 'response', 'header', 'cookie', 'local storage', 'session',
-            # Browser
-            'browser', 'page', 'web', 'website', 'url', 'address bar', 'viewport',
-            'header', 'footer', 'sidebar', 'navbar', 'navigation', 'breadcrumb'
-        ])
-
         base_url = config.MINIMAX_BASE_URL
 
-        # Respect the user's explicit choice from Settings; only auto-detect
-        # when the user leaves the model on "auto" (or unset).
+        # Respect the user's explicit model choice from Settings; otherwise
+        # fall back to the single platform default (MiniMax M2.5).
         user_model = (settings.get("llmModel") or "").strip()
         user_provider = (settings.get("llmProvider") or "").strip()
 
@@ -193,16 +135,10 @@ async def run_agent_task(task_id: str, task: str, settings: dict):
             llm_provider = user_provider or "minimax"
             llm_model = user_model
             logger.info(f"[{task_id}] Using user-selected {llm_provider}/{llm_model}")
-        elif is_browser_task:
-            # Vision task -> minimax/minimax-m2.5
-            llm_provider = "gemini"
-            llm_model = "minimax/minimax-m2.5"
-            logger.info(f"[{task_id}] Auto-detected vision task -> {llm_provider}/{llm_model}")
         else:
-            # Text task -> use minimax-m2.5
             llm_provider = "minimax"
             llm_model = "minimax/minimax-m2.5"
-            logger.info(f"[{task_id}] Auto-detected text task -> {llm_provider}/{llm_model}")
+            logger.info(f"[{task_id}] Using default {llm_provider}/{llm_model}")
 
         # Get API key from config (all via MiniMax API)
         llm_api_key = config.MINIMAX_API_KEY
@@ -220,7 +156,7 @@ async def run_agent_task(task_id: str, task: str, settings: dict):
             llm_temperature=llm_config.get("temperature", 0.2),
             llm_api_key=llm_api_key,
             llm_base_url=base_url,
-            max_iterations=settings.get("maxIterations", 10),
+            max_iterations=settings.get("maxIterations", 8),
         )
 
         logger.info(f"[{task_id}] Running agent...")
@@ -311,7 +247,7 @@ async def create_task(request: TaskRequest, background_tasks: BackgroundTasks) -
         "llmModel": request.llmModel,
         "maxIterations": request.maxIterations,
     }
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
     t = loop.create_task(run_agent_task(task_id, request.task, settings))
     _running_tasks[task_id] = t
     t.add_done_callback(lambda _: _running_tasks.pop(task_id, None))
@@ -398,50 +334,3 @@ async def clear_tasks() -> dict:
     """Clear all tasks."""
     tasks.clear()
     return {"status": "cleared"}
-
-
-# ── QA Agent proxy ──────────────────────────────────────────────────────────
-import asyncio as _asyncio
-import urllib.request as _urllib_request
-import json as _json
-
-_QA_BASE = "https://endpoint-9e403801-44eb-4baa-94f6-4d1446fb3b40.agentbase-runtime.aiplatform.vngcloud.vn"
-
-
-class QAAnalyzeRequest(BaseModel):
-    text: str
-
-
-class QATestCasesRequest(BaseModel):
-    scenarios: list
-
-
-def _post_json_sync(url: str, body: dict) -> dict:
-    data = _json.dumps(body).encode()
-    req = _urllib_request.Request(url, data=data, headers={"Content-Type": "application/json"}, method="POST")
-    with _urllib_request.urlopen(req, timeout=60) as resp:
-        return _json.loads(resp.read())
-
-
-@router.post("/qa/analyze")
-async def qa_analyze(request: QAAnalyzeRequest):
-    """Proxy: analyze requirements → scenarios."""
-    try:
-        result = await _asyncio.get_event_loop().run_in_executor(
-            None, _post_json_sync, f"{_QA_BASE}/analyze-requirements", {"text": request.text}
-        )
-        return result
-    except Exception as e:
-        raise HTTPException(status_code=502, detail=str(e))
-
-
-@router.post("/qa/test-cases")
-async def qa_test_cases(request: QATestCasesRequest):
-    """Proxy: scenarios → test cases."""
-    try:
-        result = await _asyncio.get_event_loop().run_in_executor(
-            None, _post_json_sync, f"{_QA_BASE}/generate-test-cases", {"scenarios": request.scenarios}
-        )
-        return result
-    except Exception as e:
-        raise HTTPException(status_code=502, detail=str(e))
