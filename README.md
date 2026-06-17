@@ -42,23 +42,19 @@ automation-agent/
 ├── backend/
 │   ├── main.py              # FastAPI app + uvicorn entry
 │   ├── api/
-│   │   ├── routes.py        # REST endpoints + QA proxy
-│   │   └── websocket.py     # WebSocket realtime broadcast
+│   │   ├── routes.py        # REST task endpoints + WebSocket broadcast
+│   │   └── websocket.py     # WebSocket realtime updates
 │   └── core/
 │       ├── agent.py         # BrowserAutomationAgent (browser-use)
 │       └── config.py        # .env configuration
 │
 ├── frontend/
 │   └── src/
-│       ├── App.jsx                     # Main app + task submission
+│       ├── App.jsx          # Main app + task submission + realtime updates
 │       ├── components/
-│       │   ├── ChatBox.jsx             # Browser Agent chat UI
-│       │   ├── QABox.jsx               # QA Requirements Analyzer
-│       │   ├── SettingsPanel.jsx       # LLM + browser settings
-│       │   ├── BrowserView.jsx
-│       │   └── HistoryList.jsx
+│       │   └── ChatBox.jsx   # Chat UI for browser automation
 │       └── hooks/
-│           └── useWebSocket.js         # WebSocket with auto-reconnect
+│           └── useWebSocket.js  # WebSocket with auto-reconnect
 │
 ├── .env.example             # Environment variable template
 ├── requirements.txt
@@ -73,20 +69,8 @@ automation-agent/
 2. Frontend `POST /api/v1/task` → backend returns `task_id` immediately
 3. Backend spawns an async background task running `BrowserAutomationAgent`
 4. Agent loop: LLM (MiniMax M2.5) reads the DOM → decides action → Playwright executes → repeat
-5. After each step the backend broadcasts progress over WebSocket
-6. Frontend shows live step updates; on completion displays the extracted result
-
----
-
-## Agents
-
-| Agent | Description |
-|---|---|
-| **Browser Agent** | Main agent — natural language → browser automation |
-| **QA Agent** | Analyzes requirements text → test scenarios + test cases (EP/BVA/UC) |
-| **Idempotency Agent** | API idempotency testing |
-
-QA Agent and Idempotency Agent are external services integrated via sidebar links and the `/api/v1/qa/*` proxy endpoints.
+5. After each step, the backend broadcasts progress over WebSocket
+6. Frontend shows live step updates (🚀 → 🔄 → ✅); on completion displays the extracted result
 
 ---
 
@@ -100,8 +84,6 @@ QA Agent and Idempotency Agent are external services integrated via sidebar link
 | `DELETE` | `/api/v1/task/{task_id}` | Delete task |
 | `POST` | `/api/v1/task/{task_id}/stop` | Stop running task |
 | `POST` | `/api/v1/clear` | Clear all tasks |
-| `POST` | `/api/v1/qa/analyze` | Analyze requirements → scenarios |
-| `POST` | `/api/v1/qa/test-cases` | Scenarios → test cases |
 | `WS` | `/ws` | Realtime task updates |
 
 ### Create Task — Request Body
@@ -118,7 +100,8 @@ QA Agent and Idempotency Agent are external services integrated via sidebar link
 }
 ```
 
-`llmModel` options: `auto` (default → minimax/minimax-m2.5), `minimax/minimax-m2.5`, `google/gemma-4-31b-it`, `deepseek/deepseek-v4-flash`.
+- `llmModel`: `auto` (default) or `minimax/minimax-m2.5`
+- `maxIterations`: max steps before agent gives up (default: 8)
 
 ---
 
@@ -127,22 +110,26 @@ QA Agent and Idempotency Agent are external services integrated via sidebar link
 Copy `.env.example` to `.env` and fill in your values:
 
 ```bash
-# Required
-MINIMAX_API_KEY=your_key_here
+# Required — MiniMax API credentials (VNG Cloud MaaS)
+MINIMAX_API_KEY=your_api_key_here
 MINIMAX_BASE_URL=https://maas-llm-aiplatform-hcm.api.vngcloud.vn/v1
 
-# LLM
+# LLM Settings
+LLM_PROVIDER=minimax
 LLM_MODEL=minimax/minimax-m2.5
 LLM_TEMPERATURE=0.2
 
-# Browser
+# Browser Settings
 BROWSER_TYPE=chromium
 HEADLESS=false
 STEALTH=true
+VIEWPORT=1920,1080
+TIMEOUT=30000
 
 # Server
 HOST=0.0.0.0
 PORT=8000
+DEBUG=false
 ```
 
 ---
@@ -151,14 +138,18 @@ PORT=8000
 
 ```bash
 docker build -t automation-agent .
-docker run -p 8000:8000 --env-file .env automation-agent
+docker run -p 8080:8080 --env-file .env automation-agent
 ```
 
-The container sets `HEADLESS=true` automatically via `IN_DOCKER=true`.
+The container:
+- Sets `HEADLESS=true` automatically
+- Listens on port 8080 (configurable via `PORT`)
+- Includes Chromium via the official playwright/python base image
+- Serves the built frontend at `/`
 
 ---
 
-## Input Format
+## Task Format
 
 Browser Agent understands tasks in the form:
 
@@ -171,4 +162,22 @@ Examples:
 - `Go to google.com/search?q=weather+Hanoi → Extract temperature only`
 - `Go to practicetestautomation.com/practice-test-login/ → Login with student/Password123 → Extract result message`
 
-**Limitations:** CAPTCHA, 2FA, file uploads are not supported.
+**Capabilities:**
+- ✅ Navigate to URLs, click links, fill forms
+- ✅ Extract structured data from tables, lists, text
+- ✅ Login flows (no 2FA/CAPTCHA)
+- ✅ Multi-step workflows (load more, pagination, etc.)
+
+**Limitations:**
+- ❌ CAPTCHA, 2FA/MFA, file uploads
+- ❌ Mobile/app-only sites
+- ❌ JavaScript-heavy SPAs that need extended wait times
+
+---
+
+## Development Notes
+
+- **WebSocket:** realtime task updates over `/ws` (auto-reconnect on disconnect)
+- **State:** tasks stored in-memory on the backend; restart clears all tasks
+- **Logging:** detailed LLM calls + step traces at INFO level; set `DEBUG=true` for verbose request/response content
+- **Production:** frontend is pre-built and served as static files by FastAPI; vite dev-server is dev-only
