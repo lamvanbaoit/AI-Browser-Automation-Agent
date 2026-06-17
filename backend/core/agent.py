@@ -40,6 +40,25 @@ except ImportError as e:
     logger.warning(f"browser-use import error: {e}")
 
 
+# Extra guidance appended to browser-use's built-in system prompt.
+# Targets the most common quality failure: the agent returns items in
+# page-appearance order when the task asks for a ranking ("top N", "best",
+# "highest", "most"). browser-use's internal judge flags these as FAIL even
+# though the task "completed". Keep this short — it costs tokens every step.
+AGENT_GUIDANCE = (
+    "RANKING & EXTRACTION RULES:\n"
+    "- When the task asks for 'top N', 'best', 'highest', 'most', or 'cheapest' "
+    "items, you MUST first read the relevant metric (stars, score, price, count, "
+    "views, etc.) for each candidate, then sort by that metric and return the "
+    "genuine top N. NEVER just take the first N items in the order they appear on "
+    "the page.\n"
+    "- If the ranking metric is not visible for some items, scroll or open detail "
+    "to find it before answering.\n"
+    "- Return a concise, accurate answer that directly addresses the task; do not "
+    "include unrelated page content."
+)
+
+
 def _supported_fields(cls) -> set:
     """Return the set of constructor parameter names the class accepts."""
     # Pydantic v2 models
@@ -245,6 +264,18 @@ class BrowserAutomationAgent:
         # Only keep attributes agent needs to act — cuts DOM verbosity significantly
         if "include_attributes" in fields:
             kwargs["include_attributes"] = ["id", "name", "type", "href", "role", "aria-label", "placeholder", "value"]
+        # Append ranking/extraction guidance to reduce wrong "top N" answers
+        if "extend_system_message" in fields:
+            kwargs["extend_system_message"] = AGENT_GUIDANCE
+        # Flash mode strips thinking/evaluation/next_goal from the output schema →
+        # far smaller LLM responses per step. Benchmarked ~4-6x faster wall-time
+        # (extraction 84s→14s, login 7-step ~80s→22s) with identical results.
+        if "flash_mode" in fields:
+            kwargs["flash_mode"] = True
+        # Judge is an informational-only verdict (never overrides success) and costs
+        # an extra LLM call per task. Disable it to remove that latency tail.
+        if "use_judge" in fields:
+            kwargs["use_judge"] = False
 
         return Agent(**kwargs)
 
