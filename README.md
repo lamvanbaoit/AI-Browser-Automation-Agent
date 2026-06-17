@@ -175,6 +175,14 @@ Examples:
 
 ---
 
+## Related Agents
+
+### [per-agent-young](https://github.com/TranqBuong/per-agent-young)
+
+A multi-agent QA engineering system that automatically analyzes software requirements and generates test cases, test data, and automation code through a three-agent pipeline:
+
+---
+
 ## Development Notes
 
 - **WebSocket:** realtime task updates over `/ws` (auto-reconnect on disconnect)
