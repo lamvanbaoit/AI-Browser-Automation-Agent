@@ -60,6 +60,9 @@ export function ChatBox({ messages, onSend, status }) {
   const handleInputChange = (e) => {
     setInput(e.target.value);
     if (warn) setWarn(false);
+    // Auto-expand textarea height to fit content
+    e.target.style.height = 'auto';
+    e.target.style.height = Math.min(e.target.scrollHeight, 400) + 'px'; // max 400px (~12 lines), then scroll
   };
 
   const toggleStep = (stepId) => {
@@ -147,19 +150,19 @@ export function ChatBox({ messages, onSend, status }) {
       {/* Input area */}
       <div className="border-t border-slate-200 bg-white px-4 pt-3 pb-4">
         <form onSubmit={handleSendTask}>
-          <div className={`flex items-center gap-2 border rounded-xl px-3 py-2 transition-colors ${warn ? 'border-red-400 bg-red-50' : 'border-slate-300 bg-white focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100'}`}>
-            <Globe className="w-4 h-4 text-slate-400 shrink-0" />
-            <input
-              type="text"
+          <div className={`flex gap-2 border rounded-xl px-3 py-2 transition-colors ${warn ? 'border-red-400 bg-red-50' : 'border-slate-300 bg-white focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100'}`}>
+            <Globe className="w-4 h-4 text-slate-400 shrink-0 mt-2" />
+            <textarea
               value={input}
               onChange={handleInputChange}
               placeholder="Go to [url] → [việc cần làm]"
-              className="flex-1 bg-transparent text-sm text-slate-800 placeholder-slate-400 focus:outline-none"
+              className="flex-1 bg-transparent text-sm text-slate-800 placeholder-slate-400 focus:outline-none resize-none min-h-10 max-h-48 py-1"
+              rows="1"
             />
             <button
               type="submit"
               disabled={status === 'running'}
-              className="shrink-0 w-8 h-8 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white rounded-lg flex items-center justify-center transition-colors"
+              className="shrink-0 w-8 h-8 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white rounded-lg flex items-center justify-center transition-colors mt-2"
             >
               <Send className="w-3.5 h-3.5" />
             </button>
@@ -204,6 +207,14 @@ export function ChatBox({ messages, onSend, status }) {
               <button type="button" onClick={() => { setInput('Go to old.reddit.com/r/technology → List titles of top 3 posts'); setShowGuide(false); }} className="block text-left text-slate-500 hover:text-blue-600 hover:bg-blue-50 px-1.5 py-0.5 rounded transition-colors font-mono w-full">→ old.reddit.com/r/technology → List titles of top 3 posts</button>
               <button type="button" onClick={() => { setInput('Go to google.com/search?q=weather+Hanoi+today → Extract temperature and weather condition only'); setShowGuide(false); }} className="block text-left text-slate-500 hover:text-blue-600 hover:bg-blue-50 px-1.5 py-0.5 rounded transition-colors font-mono w-full">→ google.com/search?q=weather+Hanoi+today → Extract temperature and weather condition</button>
               <button type="button" onClick={() => { setInput('Go to practicetestautomation.com/practice-test-login/ → Enter username "student" and password "Password123" → Click Login → Extract the result message'); setShowGuide(false); }} className="block text-left text-slate-500 hover:text-blue-600 hover:bg-blue-50 px-1.5 py-0.5 rounded transition-colors font-mono w-full">→ practicetestautomation.com/practice-test-login/ → Login → Extract result message</button>
+              <button type="button" onClick={() => { setInput(`Test case 1: Positive LogIn test
+Open page
+Type username student into Username field
+Type password Password123 into Password field
+Push Submit button
+Verify new page URL contains practicetestautomation.com/logged-in-successfully/
+Verify new page contains expected text ('Congratulations' or 'successfully logged in')
+Verify button Log out is displayed on the new page`); setShowGuide(false); }} className="block text-left text-slate-500 hover:text-blue-600 hover:bg-blue-50 px-1.5 py-0.5 rounded transition-colors font-mono w-full text-xs">→ Test case 1: Positive LogIn test</button>
             </div>
           )}
         </div>
