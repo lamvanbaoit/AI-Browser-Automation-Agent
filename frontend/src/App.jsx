@@ -182,17 +182,17 @@ function App() {
   const API_AGENT_URL = 'https://endpoint-47cbe90a-21d9-4a3b-b190-9bae1bdca3a2.agentbase-runtime.aiplatform.vngcloud.vn/';
 
   return (
-    <div className="flex h-screen bg-white">
-      {/* Sidebar */}
-      <div className="w-16 bg-slate-50 border-r border-slate-200 flex flex-col items-center py-4 gap-1">
+    <div className="flex h-screen bg-claude-canvas">
+      {/* Sidebar — dark navy product surface against the cream canvas */}
+      <div className="w-16 bg-claude-surface-dark border-r border-claude-surface-dark-elevated flex flex-col items-center py-4 gap-1">
         {/* Logo */}
         <div className="relative mb-3">
-          <div className="w-9 h-9 rounded-xl bg-slate-800 flex items-center justify-center">
+          <div className="w-9 h-9 rounded-xl bg-claude-primary flex items-center justify-center">
             <Bot className="w-5 h-5 text-white" />
           </div>
           <span
             title={connected ? 'Realtime connected' : 'Realtime disconnected'}
-            className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-slate-50 ${connected ? 'bg-green-500' : 'bg-slate-400'}`}
+            className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-claude-surface-dark ${connected ? 'bg-claude-success' : 'bg-claude-muted'}`}
           />
         </div>
 
@@ -200,11 +200,11 @@ function App() {
         <div className="flex flex-col items-center gap-1 w-full px-1">
           <button
             title="Browser Agent"
-            className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-sm"
+            className="w-9 h-9 rounded-xl bg-claude-primary text-white flex items-center justify-center shadow-sm"
           >
             <Globe className="w-[18px] h-[18px]" />
           </button>
-          <span className="text-[9px] font-medium text-blue-600 text-center leading-tight">Browser Agent</span>
+          <span className="text-[9px] font-medium text-claude-on-dark text-center leading-tight">Browser Agent</span>
         </div>
 
         {/* QA Agent */}
@@ -212,11 +212,11 @@ function App() {
           <button
             onClick={() => window.open(QA_URL, '_blank')}
             title="QA Requirements Analyzer — mở tab mới"
-            className="w-9 h-9 rounded-xl bg-purple-600 text-white flex items-center justify-center shadow-sm hover:bg-purple-700 transition-colors"
+            className="w-9 h-9 rounded-xl bg-claude-surface-dark-elevated text-claude-accent-teal flex items-center justify-center shadow-sm hover:bg-claude-accent-teal hover:text-white transition-colors"
           >
             <FlaskConical className="w-[18px] h-[18px]" />
           </button>
-          <span className="text-[9px] font-medium text-purple-600 text-center leading-tight">QE Agent</span>
+          <span className="text-[9px] font-medium text-claude-on-dark-soft text-center leading-tight">QE Agent</span>
         </div>
 
         {/* API Agent */}
@@ -224,11 +224,11 @@ function App() {
           <button
             onClick={() => window.open(API_AGENT_URL, '_blank')}
             title="API Agent — mở tab mới"
-            className="w-9 h-9 rounded-xl bg-teal-600 text-white flex items-center justify-center shadow-sm hover:bg-teal-700 transition-colors"
+            className="w-9 h-9 rounded-xl bg-claude-surface-dark-elevated text-claude-accent-amber flex items-center justify-center shadow-sm hover:bg-claude-accent-amber hover:text-white transition-colors"
           >
             <Webhook className="w-[18px] h-[18px]" />
           </button>
-          <span className="text-[9px] font-medium text-teal-600 text-center leading-tight">Idempotency Agent</span>
+          <span className="text-[9px] font-medium text-claude-on-dark-soft text-center leading-tight">Idempotency Agent</span>
         </div>
       </div>
 

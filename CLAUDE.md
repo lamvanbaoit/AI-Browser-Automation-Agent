@@ -246,3 +246,12 @@ Each skill folder contains a `SKILL.md` (the contract read by the AI tool) and a
 3. **Always `--dry-run` teardown** before the real delete.
 4. **Never commit `.env`** — only `.env.example` is tracked.
 5. **First time? Use `/agentbase-wizard`** — it covers the full 9-step path.
+
+---
+
+## UI / Design
+
+Before writing or changing any UI (React components, Tailwind styles, layout),
+read [`DESIGN.md`](DESIGN.md) and follow the color tokens, type scale, spacing,
+and component patterns defined there. Treat `DESIGN.md` as the source of truth
+for visual decisions so the interface stays consistent.

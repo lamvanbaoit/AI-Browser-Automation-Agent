@@ -3,14 +3,22 @@
 @tailwind utilities;
 
 :root {
-  --dark-primary: #ffffff;
-  --dark-secondary: #f3f4f6;
-  --dark-border: #e5e7eb;
+  /* Claude design language — see DESIGN.md */
+  --claude-canvas: #faf9f5;
+  --claude-ink: #141413;
+  --claude-primary: #cc785c;
 }
 
 body {
-  background: var(--dark-primary);
-  color: #111827;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--claude-canvas);
+  color: var(--claude-ink);
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   margin: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Serif display utility for headings (Fraunces ≈ Copernicus/Tiempos) */
+.font-display {
+  font-family: 'Fraunces', 'Copernicus', 'Tiempos Headline', Georgia, serif;
+  letter-spacing: -0.01em;
 }

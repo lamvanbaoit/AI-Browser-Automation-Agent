@@ -3,25 +3,25 @@ import { Send, Bot, User, ChevronDown, ChevronRight, Loader2, Globe, Copy, Check
 
 function StepItem({ step, isExpanded, onToggle }) {
   return (
-    <div className="border border-slate-200 rounded-lg mb-1.5 overflow-hidden text-xs">
+    <div className="border border-claude-hairline rounded-lg mb-1.5 overflow-hidden text-xs">
       <button
         onClick={onToggle}
-        className="w-full flex items-center gap-2 px-3 py-2 bg-slate-50 hover:bg-slate-100 transition-colors text-left"
+        className="w-full flex items-center gap-2 px-3 py-2 bg-claude-surface-soft hover:bg-claude-surface-card transition-colors text-left"
       >
-        {isExpanded ? <ChevronDown className="w-3 h-3 text-slate-400 shrink-0" /> : <ChevronRight className="w-3 h-3 text-slate-400 shrink-0" />}
-        <span className="font-semibold text-blue-600 shrink-0">Step {step.step}</span>
-        <span className="text-slate-500 truncate">{step.action?.substring(0, 80)}</span>
+        {isExpanded ? <ChevronDown className="w-3 h-3 text-claude-muted-soft shrink-0" /> : <ChevronRight className="w-3 h-3 text-claude-muted-soft shrink-0" />}
+        <span className="font-semibold text-claude-primary shrink-0">Step {step.step}</span>
+        <span className="text-claude-muted truncate">{step.action?.substring(0, 80)}</span>
       </button>
       {isExpanded && (
-        <div className="px-3 py-2 bg-white space-y-1.5">
+        <div className="px-3 py-2 bg-claude-canvas space-y-1.5">
           <div>
-            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Action</span>
-            <p className="text-slate-700 mt-0.5">{step.action}</p>
+            <span className="text-[10px] font-semibold text-claude-muted-soft uppercase tracking-wide">Action</span>
+            <p className="text-claude-body mt-0.5">{step.action}</p>
           </div>
           {step.evaluation && (
             <div>
-              <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Evaluation</span>
-              <p className="text-emerald-600 mt-0.5">{step.evaluation}</p>
+              <span className="text-[10px] font-semibold text-claude-muted-soft uppercase tracking-wide">Evaluation</span>
+              <p className="text-claude-accent-teal mt-0.5">{step.evaluation}</p>
             </div>
           )}
         </div>
@@ -170,8 +170,8 @@ export function ChatBox({ messages, onSend, status }) {
         <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
 
         {hasSteps && (
-          <div className="border-t border-slate-200 pt-2 mt-3">
-            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1.5">Các bước thực hiện</p>
+          <div className="border-t border-claude-hairline pt-2 mt-3">
+            <p className="text-[10px] font-semibold text-claude-muted-soft uppercase tracking-wide mb-1.5">Các bước thực hiện</p>
             {msg.stepDetails.map(step => (
               <StepItem
                 key={step.step}
@@ -184,8 +184,8 @@ export function ChatBox({ messages, onSend, status }) {
         )}
 
         {hasShots && (
-          <div className="border-t border-slate-200 pt-2 mt-3">
-            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1.5 flex items-center gap-1">
+          <div className="border-t border-claude-hairline pt-2 mt-3">
+            <p className="text-[10px] font-semibold text-claude-muted-soft uppercase tracking-wide mb-1.5 flex items-center gap-1">
               <ImageIcon className="w-3 h-3" /> Ảnh chụp màn hình ({msg.screenshots.length})
             </p>
             <div className="flex flex-wrap gap-2">
@@ -195,7 +195,7 @@ export function ChatBox({ messages, onSend, status }) {
                   type="button"
                   onClick={() => setLightbox(src)}
                   title="Bấm để phóng to"
-                  className="block rounded-lg overflow-hidden border border-slate-200 hover:border-blue-400 hover:shadow-sm transition-all"
+                  className="block rounded-lg overflow-hidden border border-claude-hairline hover:border-claude-primary hover:shadow-sm transition-all"
                 >
                   <img src={src} alt={`screenshot ${i + 1}`} loading="lazy" className="h-24 w-auto object-cover" />
                 </button>
@@ -208,12 +208,12 @@ export function ChatBox({ messages, onSend, status }) {
   };
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex flex-col h-full bg-claude-canvas">
       {/* Screenshot lightbox */}
       {lightbox && (
         <div
           onClick={() => setLightbox(null)}
-          className="fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-6 cursor-zoom-out animate-in fade-in"
+          className="fixed inset-0 z-50 bg-claude-ink/80 flex items-center justify-center p-6 cursor-zoom-out animate-in fade-in"
         >
           <button
             type="button"
@@ -236,31 +236,31 @@ export function ChatBox({ messages, onSend, status }) {
       <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center px-4 pb-16">
-            <div className="w-14 h-14 rounded-2xl bg-blue-50 flex items-center justify-center mb-4">
-              <Globe className="w-7 h-7 text-blue-500" />
+            <div className="w-14 h-14 rounded-2xl bg-claude-surface-card flex items-center justify-center mb-4">
+              <Globe className="w-7 h-7 text-claude-primary" />
             </div>
-            <h2 className="text-lg font-semibold text-slate-800">AI Browser Automation Agent</h2>
-            <p className="text-sm text-slate-500 mt-1">MiniMax M2.5 · VNG Cloud</p>
-            <p className="text-xs text-slate-400 mt-3 max-w-xs leading-relaxed">
+            <h2 className="font-display text-2xl text-claude-ink">AI Browser Automation Agent</h2>
+            <p className="text-sm text-claude-muted mt-1">MiniMax M2.5 · VNG Cloud</p>
+            <p className="text-xs text-claude-muted-soft mt-3 max-w-xs leading-relaxed">
               Nhập lệnh bằng ngôn ngữ tự nhiên. AI sẽ tự động điều khiển trình duyệt và trả kết quả về giao diện này.
             </p>
 
             {/* Onboarding — clickable example prompts */}
             <div className="mt-6 w-full max-w-sm space-y-2">
-              <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide text-left">Thử ngay</p>
+              <p className="text-[10px] font-semibold text-claude-muted-soft uppercase tracking-wide text-left">Thử ngay</p>
               {EXAMPLES.map(ex => (
                 <button
                   key={ex.id}
                   type="button"
                   onClick={() => fillExample(ex.prompt)}
-                  className="group w-full flex items-center gap-3 text-left bg-slate-50 hover:bg-white border border-slate-200 hover:border-blue-300 hover:shadow-sm px-3 py-2.5 rounded-xl transition-all"
+                  className="group w-full flex items-center gap-3 text-left bg-claude-surface-soft hover:bg-claude-surface-card border border-claude-hairline hover:border-claude-primary/50 hover:shadow-sm px-3 py-2.5 rounded-xl transition-all"
                 >
                   <span className="text-base shrink-0">{ex.icon}</span>
                   <span className="min-w-0 flex-1">
-                    <span className="text-[10px] font-semibold text-blue-500 block">{ex.label}</span>
-                    <span className="text-xs text-slate-600 block truncate">{ex.short}</span>
+                    <span className="text-[10px] font-semibold text-claude-primary block">{ex.label}</span>
+                    <span className="text-xs text-claude-body block truncate">{ex.short}</span>
                   </span>
-                  <Send className="w-3.5 h-3.5 text-slate-300 group-hover:text-blue-500 shrink-0 transition-colors" />
+                  <Send className="w-3.5 h-3.5 text-claude-muted-soft group-hover:text-claude-primary shrink-0 transition-colors" />
                 </button>
               ))}
             </div>
@@ -269,22 +269,22 @@ export function ChatBox({ messages, onSend, status }) {
           messages.map((msg, i) => (
             <div key={msg.id || `msg-${i}`} className={`flex gap-2.5 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
               {msg.sender !== 'user' && (
-                <div className="w-7 h-7 rounded-full bg-blue-50 flex items-center justify-center shrink-0 mt-0.5">
-                  <Bot className="w-4 h-4 text-blue-500" />
+                <div className="w-7 h-7 rounded-full bg-claude-surface-card flex items-center justify-center shrink-0 mt-0.5">
+                  <Bot className="w-4 h-4 text-claude-primary" />
                 </div>
               )}
               <div className={`max-w-[80%] rounded-2xl px-4 py-3 ${
                 msg.sender === 'user'
-                  ? 'bg-blue-600 text-white rounded-br-md'
-                  : 'bg-slate-50 border border-slate-200 text-slate-800 rounded-bl-md'
+                  ? 'bg-claude-primary text-white rounded-br-md'
+                  : 'bg-claude-surface-soft border border-claude-hairline text-claude-body-strong rounded-bl-md'
               }`}>
                 {renderMessageContent(msg)}
-                <p className={`text-[10px] mt-1.5 ${msg.sender === 'user' ? 'text-blue-200' : 'text-slate-400'}`}>
+                <p className={`text-[10px] mt-1.5 ${msg.sender === 'user' ? 'text-white/70' : 'text-claude-muted-soft'}`}>
                   {msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
                 </p>
               </div>
               {msg.sender === 'user' && (
-                <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center shrink-0 mt-0.5">
+                <div className="w-7 h-7 rounded-full bg-claude-primary flex items-center justify-center shrink-0 mt-0.5">
                   <User className="w-4 h-4 text-white" />
                 </div>
               )}
@@ -294,12 +294,12 @@ export function ChatBox({ messages, onSend, status }) {
 
         {status === 'running' && (
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
-              <Bot className="w-4 h-4 text-blue-500" />
+            <div className="w-7 h-7 rounded-full bg-claude-surface-card flex items-center justify-center shrink-0">
+              <Bot className="w-4 h-4 text-claude-primary" />
             </div>
-            <div className="bg-slate-50 border border-slate-200 rounded-2xl rounded-bl-md px-4 py-3 flex items-center gap-2">
-              <Loader2 className="w-3.5 h-3.5 text-blue-500 animate-spin" />
-              <span className="text-sm text-slate-600">Agent đang xử lý...</span>
+            <div className="bg-claude-surface-soft border border-claude-hairline rounded-2xl rounded-bl-md px-4 py-3 flex items-center gap-2">
+              <Loader2 className="w-3.5 h-3.5 text-claude-primary animate-spin" />
+              <span className="text-sm text-claude-body">Agent đang xử lý...</span>
             </div>
           </div>
         )}
@@ -307,37 +307,37 @@ export function ChatBox({ messages, onSend, status }) {
       </div>
 
       {/* Input area */}
-      <div className="border-t border-slate-200 bg-white px-4 pt-3 pb-4">
+      <div className="border-t border-claude-hairline bg-claude-canvas px-4 pt-3 pb-4">
         <form onSubmit={handleSendTask}>
-          <div className={`flex gap-2 border rounded-xl px-3 py-2 transition-colors ${warn ? 'border-red-400 bg-red-50' : 'border-slate-300 bg-white focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100'}`}>
-            <Globe className="w-4 h-4 text-slate-400 shrink-0 mt-2" />
+          <div className={`flex gap-2 border rounded-xl px-3 py-2 transition-colors ${warn ? 'border-claude-error bg-claude-error/10' : 'border-claude-hairline bg-white focus-within:border-claude-primary focus-within:ring-2 focus-within:ring-claude-primary/15'}`}>
+            <Globe className="w-4 h-4 text-claude-muted-soft shrink-0 mt-2" />
             <textarea
               ref={textareaRef}
               value={input}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
               placeholder="Go to [url] → [việc cần làm]"
-              className="flex-1 bg-transparent text-sm text-slate-800 placeholder-slate-400 focus:outline-none resize-none min-h-10 py-1"
+              className="flex-1 bg-transparent text-sm text-claude-body-strong placeholder-claude-muted-soft focus:outline-none resize-none min-h-10 py-1"
               rows="1"
             />
             <button
               type="submit"
               disabled={status === 'running'}
-              className="shrink-0 w-8 h-8 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white rounded-lg flex items-center justify-center transition-colors mt-2"
+              className="shrink-0 w-8 h-8 bg-claude-primary hover:bg-claude-primary-active disabled:bg-claude-primary-disabled text-white rounded-lg flex items-center justify-center transition-colors mt-2"
             >
               <Send className="w-3.5 h-3.5" />
             </button>
           </div>
           {warn ? (
-            <p className="text-xs text-red-500 mt-1.5 px-1">
+            <p className="text-xs text-claude-error mt-1.5 px-1">
               Nhập URL hoặc lệnh điều hướng. Ví dụ: <span className="font-mono">Go to github.com/trending → ...</span>
             </p>
           ) : (
-            <div className="flex items-center justify-between mt-1.5 px-1 text-[10px] text-slate-400">
+            <div className="flex items-center justify-between mt-1.5 px-1 text-[10px] text-claude-muted-soft">
               <span className="flex items-center gap-1">
-                <kbd className="inline-flex items-center gap-0.5 font-sans font-medium text-slate-500"><CornerDownLeft className="w-3 h-3" /> gửi</kbd>
-                <span className="text-slate-300">·</span>
-                <kbd className="font-sans font-medium text-slate-500">⇧ + ↵ xuống dòng</kbd>
+                <kbd className="inline-flex items-center gap-0.5 font-sans font-medium text-claude-muted"><CornerDownLeft className="w-3 h-3" /> gửi</kbd>
+                <span className="text-claude-hairline">·</span>
+                <kbd className="font-sans font-medium text-claude-muted">⇧ + ↵ xuống dòng</kbd>
               </span>
               {input.length > 0 && (
                 <span className="tabular-nums">{input.length} ký tự · {lineCount} dòng</span>
@@ -351,61 +351,61 @@ export function ChatBox({ messages, onSend, status }) {
           <button
             type="button"
             onClick={() => setShowGuide(v => !v)}
-            className="flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-slate-700 transition-colors py-1"
+            className="flex items-center gap-1.5 text-xs font-medium text-claude-muted hover:text-claude-body-strong transition-colors py-1"
           >
-            {showGuide ? <ChevronDown className="w-3.5 h-3.5 text-blue-500" /> : <ChevronRight className="w-3.5 h-3.5 text-slate-400" />}
+            {showGuide ? <ChevronDown className="w-3.5 h-3.5 text-claude-primary" /> : <ChevronRight className="w-3.5 h-3.5 text-claude-muted-soft" />}
             <span>💡 Quick Start</span>
           </button>
 
           {showGuide && (
-            <div className="mt-2 max-h-80 overflow-y-auto rounded-xl bg-gradient-to-b from-blue-50 to-slate-50 border border-slate-200 p-4 space-y-3 text-xs">
+            <div className="mt-2 max-h-80 overflow-y-auto rounded-xl bg-gradient-to-b from-claude-surface-soft to-claude-surface-card border border-claude-hairline p-4 space-y-3 text-xs">
               <div>
-                <p className="font-semibold text-slate-800 mb-1">Cách dùng</p>
-                <p className="text-slate-600">Nhập lệnh: <span className="font-mono bg-white px-2 py-1 rounded text-blue-600 font-medium">Go to [url] → [việc cần làm]</span></p>
+                <p className="font-semibold text-claude-body-strong mb-1">Cách dùng</p>
+                <p className="text-claude-body">Nhập lệnh: <span className="font-mono bg-white px-2 py-1 rounded text-claude-primary font-medium">Go to [url] → [việc cần làm]</span></p>
               </div>
 
               <div>
-                <p className="font-semibold text-slate-800 mb-1.5">Ví dụ nhanh</p>
+                <p className="font-semibold text-claude-body-strong mb-1.5">Ví dụ nhanh</p>
                 <div className="space-y-1.5">
                   {EXAMPLES.map(ex => (
-                    <div key={ex.id} className="group flex items-stretch gap-1 bg-transparent hover:bg-white rounded-lg transition-all border border-transparent hover:border-blue-200">
-                      <button type="button" onClick={() => fillExample(ex.prompt)} className="flex-1 min-w-0 text-left text-slate-600 hover:text-blue-600 px-2.5 py-2 transition-colors">
-                        <span className="font-mono text-[10px] text-blue-500 block mb-0.5">{ex.icon} {ex.label}</span>
+                    <div key={ex.id} className="group flex items-stretch gap-1 bg-transparent hover:bg-white rounded-lg transition-all border border-transparent hover:border-claude-primary/30">
+                      <button type="button" onClick={() => fillExample(ex.prompt)} className="flex-1 min-w-0 text-left text-claude-body hover:text-claude-primary px-2.5 py-2 transition-colors">
+                        <span className="font-mono text-[10px] text-claude-primary block mb-0.5">{ex.icon} {ex.label}</span>
                         <span className="text-xs block truncate">{ex.short}</span>
                       </button>
-                      <button type="button" onClick={(e) => handleCopy(ex.prompt, ex.id, e)} title="Copy lệnh" className="shrink-0 w-8 flex items-center justify-center text-slate-300 hover:text-blue-500 opacity-0 group-hover:opacity-100 transition-all">
-                        {copied === ex.id ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                      <button type="button" onClick={(e) => handleCopy(ex.prompt, ex.id, e)} title="Copy lệnh" className="shrink-0 w-8 flex items-center justify-center text-claude-muted-soft hover:text-claude-primary opacity-0 group-hover:opacity-100 transition-all">
+                        {copied === ex.id ? <Check className="w-3.5 h-3.5 text-claude-success" /> : <Copy className="w-3.5 h-3.5" />}
                       </button>
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div className="border-t border-slate-200 pt-3">
-                <p className="font-semibold text-slate-800 mb-2">Test Case Templates</p>
+              <div className="border-t border-claude-hairline pt-3">
+                <p className="font-semibold text-claude-body-strong mb-2">Test Case Templates</p>
                 <div className="space-y-2">
                   {TEST_CASES.map(tc => (
-                    <div key={tc.id} className="group flex items-stretch gap-1 bg-white border-2 border-blue-200 hover:border-blue-400 rounded-lg transition-all">
-                      <button type="button" onClick={() => fillExample(tc.prompt)} className="flex-1 min-w-0 text-left hover:bg-blue-50 px-3 py-2.5 rounded-l-md transition-colors">
-                        <span className="font-mono text-[10px] text-blue-600 font-semibold block mb-1">{tc.icon} {tc.title}</span>
-                        <span className="text-[11px] text-slate-600 block leading-relaxed">{tc.desc}</span>
+                    <div key={tc.id} className="group flex items-stretch gap-1 bg-white border-2 border-claude-primary/30 hover:border-claude-primary rounded-lg transition-all">
+                      <button type="button" onClick={() => fillExample(tc.prompt)} className="flex-1 min-w-0 text-left hover:bg-claude-surface-soft px-3 py-2.5 rounded-l-md transition-colors">
+                        <span className="font-mono text-[10px] text-claude-primary font-semibold block mb-1">{tc.icon} {tc.title}</span>
+                        <span className="text-[11px] text-claude-body block leading-relaxed">{tc.desc}</span>
                       </button>
-                      <button type="button" onClick={(e) => handleCopy(tc.prompt, tc.id, e)} title="Copy test case" className="shrink-0 w-9 flex items-center justify-center text-slate-300 hover:text-blue-500 border-l border-slate-100 transition-colors">
-                        {copied === tc.id ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                      <button type="button" onClick={(e) => handleCopy(tc.prompt, tc.id, e)} title="Copy test case" className="shrink-0 w-9 flex items-center justify-center text-claude-muted-soft hover:text-claude-primary border-l border-claude-hairline transition-colors">
+                        {copied === tc.id ? <Check className="w-3.5 h-3.5 text-claude-success" /> : <Copy className="w-3.5 h-3.5" />}
                       </button>
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div className="bg-white border border-slate-200 rounded-lg p-2.5 text-[11px] text-slate-600">
-                <p className="font-semibold text-slate-700 mb-1.5">Khả năng</p>
+              <div className="bg-white border border-claude-hairline rounded-lg p-2.5 text-[11px] text-claude-body">
+                <p className="font-semibold text-claude-body-strong mb-1.5">Khả năng</p>
                 <div className="flex flex-wrap gap-x-3 gap-y-1">
                   <span>✅ Trích xuất dữ liệu</span>
                   <span>✅ Điền form &amp; đăng nhập</span>
                   <span>✅ Điều hướng nhiều bước</span>
                 </div>
-                <p className="mt-1.5 pt-1.5 border-t border-slate-100 text-slate-500">⛔ Không hỗ trợ: CAPTCHA, 2FA, upload file</p>
+                <p className="mt-1.5 pt-1.5 border-t border-claude-hairline-soft text-claude-muted">⛔ Không hỗ trợ: CAPTCHA, 2FA, upload file</p>
               </div>
             </div>
           )}
