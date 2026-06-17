@@ -2,12 +2,62 @@
 Browser Agent using browser-use library
 AI-powered browser automation
 """
+import base64
 import inspect
+import io
 import logging
 import time
 from typing import Optional, List, Callable
 
 logger = logging.getLogger(__name__)
+
+# Max screenshots returned to the UI per task — bounds the WebSocket payload.
+# We keep the most recent steps.
+MAX_SCREENSHOTS = 6
+# Downscale target — browser-use viewport PNGs are ~480 KB each, wasteful for a
+# chat thumbnail. Resize to this width and re-encode as JPEG (~40 KB).
+SCREENSHOT_MAX_WIDTH = 900
+SCREENSHOT_JPEG_QUALITY = 72
+
+# Import Pillow once at module load and warm its codecs with a tiny encode, so
+# the first real downscale doesn't pay a ~1.5s one-time lazy-init cost on the
+# first task after server start. Steady-state downscale is ~27 ms/image.
+try:
+    from PIL import Image as _PILImage
+
+    _buf = io.BytesIO()
+    _PILImage.new("RGB", (4, 4)).save(_buf, format="JPEG")
+    _PIL_OK = True
+except Exception as _e:  # pragma: no cover - Pillow should always be installed
+    _PILImage = None
+    _PIL_OK = False
+    logger.warning(f"Pillow unavailable, screenshots will be sent un-resized: {_e}")
+
+
+def _to_display_screenshot(b64: str) -> str:
+    """Turn a raw base64 PNG from browser-use into a compact data URI for the UI.
+
+    Downscales to SCREENSHOT_MAX_WIDTH and re-encodes as JPEG to keep the
+    WebSocket payload small. Falls back to the original PNG data URI if Pillow
+    is unavailable or anything goes wrong — the image still renders either way.
+    """
+    if not _PIL_OK:
+        return f"data:image/png;base64,{b64}"
+    try:
+        raw = base64.b64decode(b64)
+        img = _PILImage.open(io.BytesIO(raw))
+        if img.mode in ("RGBA", "P"):
+            img = img.convert("RGB")
+        if img.width > SCREENSHOT_MAX_WIDTH:
+            ratio = SCREENSHOT_MAX_WIDTH / img.width
+            img = img.resize((SCREENSHOT_MAX_WIDTH, int(img.height * ratio)))
+        buf = io.BytesIO()
+        img.save(buf, format="JPEG", quality=SCREENSHOT_JPEG_QUALITY, optimize=True)
+        small = base64.b64encode(buf.getvalue()).decode("ascii")
+        return f"data:image/jpeg;base64,{small}"
+    except Exception as e:
+        logger.warning(f"[Screenshot downscale] fallback to raw: {e}")
+        return f"data:image/png;base64,{b64}"
 
 try:
     import litellm
@@ -298,35 +348,43 @@ class BrowserAutomationAgent:
             step_count += 1
 
             try:
+                # browser-use 0.13.1: agent.history is an AgentHistoryList whose
+                # .history is the list of AgentHistory items; the action and the
+                # agent's reasoning live on item.model_output (NOT on the item).
                 history = getattr(agent, "history", None)
-                raw_steps = getattr(agent, "steps", [])
+                items = getattr(history, "history", None) or []
+                latest = items[-1] if items else None
 
-                latest = None
-                if hasattr(history, "steps") and history.steps:
-                    latest = history.steps[-1]
-                elif hasattr(history, "__getitem__") and len(history) > 0:
-                    latest = history[-1]
-                elif raw_steps:
-                    latest = raw_steps[-1]
+                action_info = ""
+                evaluation = ""
+                if latest is not None:
+                    mo = getattr(latest, "model_output", None)
+                    if mo is not None:
+                        actions = getattr(mo, "action", None)
+                        if actions:
+                            a0 = actions[0] if isinstance(actions, (list, tuple)) else actions
+                            try:
+                                # model_dump → compact dict like {"go_to_url": {...}}
+                                dumped = {k: v for k, v in a0.model_dump().items() if v is not None}
+                                action_info = str(dumped)
+                            except Exception:
+                                action_info = str(a0)
+                        # evaluation_previous_goal is stripped in flash_mode; fall
+                        # back to memory, which flash_mode keeps.
+                        evaluation = (
+                            getattr(mo, "evaluation_previous_goal", "")
+                            or getattr(mo, "memory", "")
+                            or ""
+                        )
 
-                if latest:
-                    action_info = ""
-                    if hasattr(latest, "action") and latest.action:
-                        action_info = str(latest.action)
-                    elif hasattr(latest, "actions") and latest.actions:
-                        action_info = str(latest.actions[0])
-
-                    evaluation = ""
-                    if hasattr(latest, "evaluation") and latest.evaluation:
-                        evaluation = str(latest.evaluation)
-
+                if action_info or evaluation:
                     step = {
                         "step": step_count,
-                        "action": action_info[:200],
-                        "evaluation": evaluation[:200],
+                        "action": str(action_info)[:200],
+                        "evaluation": str(evaluation)[:200],
                     }
                     step_details.append(step)
-                    logger.info(f"[Step {step_count}] {action_info[:50]}...")
+                    logger.info(f"[Step {step_count}] {str(action_info)[:50]}...")
 
                     if step_callback:
                         await step_callback(step)
@@ -345,6 +403,17 @@ class BrowserAutomationAgent:
                 on_step_start=on_step_start,
                 on_step_end=on_step_end,
             )
+
+            # browser-use captures a screenshot per step regardless of use_vision,
+            # so surfacing them for the UI is essentially free (no extra LLM cost).
+            # Cap to the last few to bound the WebSocket payload size.
+            screenshots: List[str] = []
+            try:
+                if hasattr(result, "screenshots"):
+                    all_ss = [s for s in (result.screenshots() or []) if s]
+                    screenshots = [_to_display_screenshot(s) for s in all_ss[-MAX_SCREENSHOTS:]]
+            except Exception as e:
+                logger.warning(f"[Screenshot capture] Error: {e}")
 
             # Extract final result using browser-use API (avoid string repr parsing)
             result_text = ""
@@ -371,7 +440,7 @@ class BrowserAutomationAgent:
                         return {
                             "status": "error",
                             "error": errors[0],
-                            "screenshots": [],
+                            "screenshots": screenshots,
                             "step_details": step_details,
                         }
                 except Exception:
@@ -384,7 +453,7 @@ class BrowserAutomationAgent:
                 "status": "success",
                 "task": task,
                 "result": result_text,
-                "screenshots": [],
+                "screenshots": screenshots,
                 "step_details": step_details,
             }
 

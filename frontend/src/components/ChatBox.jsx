@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, ChevronDown, ChevronRight, Loader2, Globe, Copy, Check, CornerDownLeft } from 'lucide-react';
+import { Send, Bot, User, ChevronDown, ChevronRight, Loader2, Globe, Copy, Check, CornerDownLeft, Image as ImageIcon, X } from 'lucide-react';
 
 function StepItem({ step, isExpanded, onToggle }) {
   return (
@@ -88,6 +88,7 @@ export function ChatBox({ messages, onSend, status }) {
   const [warn, setWarn] = useState(false);
   const [showGuide, setShowGuide] = useState(true);
   const [copied, setCopied] = useState(null);
+  const [lightbox, setLightbox] = useState(null);
   const bottomRef = useRef(null);
   const textareaRef = useRef(null);
 
@@ -103,6 +104,14 @@ export function ChatBox({ messages, onSend, status }) {
     ta.style.height = 'auto';
     ta.style.height = Math.min(ta.scrollHeight, 400) + 'px';
   }, [input]);
+
+  // Close the screenshot lightbox on Escape
+  useEffect(() => {
+    if (!lightbox) return;
+    const onKey = (e) => { if (e.key === 'Escape') setLightbox(null); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [lightbox]);
 
   const handleSendTask = (e) => {
     e.preventDefault();
@@ -153,11 +162,15 @@ export function ChatBox({ messages, onSend, status }) {
   };
 
   const renderMessageContent = (msg) => {
-    if (msg.stepDetails && msg.stepDetails.length > 0) {
-      return (
-        <div>
-          <p className="text-sm whitespace-pre-wrap mb-3 leading-relaxed">{msg.content}</p>
-          <div className="border-t border-slate-200 pt-2 mt-2">
+    const hasSteps = msg.stepDetails && msg.stepDetails.length > 0;
+    const hasShots = msg.screenshots && msg.screenshots.length > 0;
+
+    return (
+      <div>
+        <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+
+        {hasSteps && (
+          <div className="border-t border-slate-200 pt-2 mt-3">
             <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1.5">Các bước thực hiện</p>
             {msg.stepDetails.map(step => (
               <StepItem
@@ -168,14 +181,57 @@ export function ChatBox({ messages, onSend, status }) {
               />
             ))}
           </div>
-        </div>
-      );
-    }
-    return <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>;
+        )}
+
+        {hasShots && (
+          <div className="border-t border-slate-200 pt-2 mt-3">
+            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1.5 flex items-center gap-1">
+              <ImageIcon className="w-3 h-3" /> Ảnh chụp màn hình ({msg.screenshots.length})
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {msg.screenshots.map((src, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => setLightbox(src)}
+                  title="Bấm để phóng to"
+                  className="block rounded-lg overflow-hidden border border-slate-200 hover:border-blue-400 hover:shadow-sm transition-all"
+                >
+                  <img src={src} alt={`screenshot ${i + 1}`} loading="lazy" className="h-24 w-auto object-cover" />
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
     <div className="flex flex-col h-full bg-white">
+      {/* Screenshot lightbox */}
+      {lightbox && (
+        <div
+          onClick={() => setLightbox(null)}
+          className="fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-6 cursor-zoom-out animate-in fade-in"
+        >
+          <button
+            type="button"
+            onClick={() => setLightbox(null)}
+            className="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors"
+            title="Đóng (Esc)"
+          >
+            <X className="w-5 h-5" />
+          </button>
+          <img
+            src={lightbox}
+            alt="screenshot"
+            onClick={(e) => e.stopPropagation()}
+            className="max-w-full max-h-full rounded-lg shadow-2xl cursor-default"
+          />
+        </div>
+      )}
+
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4">
         {messages.length === 0 ? (
