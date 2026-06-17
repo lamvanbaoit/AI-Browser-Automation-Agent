@@ -87,13 +87,9 @@ function App() {
           `\n📊 Result:\n${resultText}`,
         ].filter(Boolean).join('\n');
 
-        const existingIdx = currentMessages.findIndex(m => m.id === currentKey);
-        if (existingIdx >= 0) {
-          const updated = [...currentMessages];
-          updated[existingIdx] = { ...updated[existingIdx], content: newContent, id: doneKey, stepDetails, screenshots };
-          return updated;
-        }
-        return [...currentMessages, { sender: 'bot', content: newContent, id: doneKey, stepDetails, screenshots, timestamp: new Date().toISOString() }];
+        // Remove any stale bubbles (task-id or running versions) and replace with final done bubble
+        const filtered = currentMessages.filter(m => m.id !== currentKey && m.id !== doneKey && m.id !== errorKey);
+        return [...filtered, { sender: 'bot', content: newContent, id: doneKey, stepDetails, screenshots, timestamp: new Date().toISOString() }];
       }
 
       // Running (live progress) — update the same bubble created on send,
